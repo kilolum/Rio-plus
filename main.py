@@ -280,7 +280,7 @@ if __name__ == '__main__':
         print('')
         print_menu(menu_options_main)
         players = load_from_file()
-        update_all_players()
+        if len(players) >= 1: update_all_players()
         try:
             option = int(input('Enter your choice: '))
         except:
