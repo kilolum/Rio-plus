@@ -124,7 +124,8 @@ def load_from_file():
         return players
 
     except FileNotFoundError:
-        print("File 'test.json' not found.")
+        print("File 'playerdata.json' not found.")
+        print("Start by adding a player and then add characters to the player")
         return []
 
 def add_player(players):
