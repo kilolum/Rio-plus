@@ -267,7 +267,11 @@ def option3(): # CHANGE DEFAULT PLAYER
 
     else:
         print("Invalid input format. Please enter a valid player name")
-        
+
+## TODO implement get vault status
+
+def option4():
+    pass        
 
 if __name__ == '__main__':
     while 1:
@@ -297,7 +301,7 @@ if __name__ == '__main__':
         if option == 5:
             exit()
         else: 
-            print(f'Invalid option. Please enter a digit between 1 and {len(menu_options)}')
+            print(f'Invalid option. Please enter a digit between 1 and {len(menu_options_main)}')
 
 
 
