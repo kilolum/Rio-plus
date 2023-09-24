@@ -70,9 +70,6 @@ def get_approximate_lvl(score):
     return approx
 
 class Player():
-    name = ""
-    characters = []
-    results = []
 
     def __init__(self, name):
         self.name = name
@@ -90,22 +87,7 @@ class Player():
         self.characters.remove(Character(name, realm, region))
 
 
-    def get_player_update_tasks(self,session):
-        tasks = []
-        url = "https://raider.io/api/v1/characters/profile?region={}&realm={}&name={}&fields={}"
 
-        for character in self.characters:
-            tasks.append(asyncio.create_task(session.get(url.format(character.region, character.realm, character.name, "mythic_plus_best_runs"), ssl=False)))
-            tasks.append(asyncio.create_task(session.get(url.format(character.region, character.realm, character.name, "mythic_plus_alternate_runs"), ssl=False)))
-        return tasks
-        
-
-    async def get_player_update(self):
-        async with CachedSession(cache=SQLiteBackend(cache_name='player_cache', expire_after=60*30)) as session:
-            tasks = self.get_player_update_tasks(session)
-            responses = await asyncio.gather(*tasks)
-            for response in responses:
-                self.results.append(await response.json())
 
     def get_affix(self, region):
         affixes = requests.get(f"https://raider.io/api/v1/mythic-plus/affixes?region={region}&locale=en")
@@ -181,5 +163,6 @@ class Player():
         ## print table
         table = tabulate(table_data, headers, tablefmt="plain_grid")
         print(table)
+        print("")
         
         

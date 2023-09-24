@@ -3,9 +3,11 @@ from player import Player
 from character import Character
 import time
 import asyncio
+from aiohttp_client_cache import CachedSession, SQLiteBackend
 import re
 import datetime
 import time
+from tqdm.asyncio import tqdm
 
 players = []
 default_player = 0
@@ -72,7 +74,7 @@ players.append(p2)
 players.append(p3)
 """
 
-def update_all_players():
+"""def update_all_players():
     start = time.time()
 
     for p in players:
@@ -80,6 +82,80 @@ def update_all_players():
 
     end = time.time()
     print(end - start)
+"""
+
+
+"""def get_players_update_tasks(players):
+    tasks = []
+    url = "https://raider.io/api/v1/characters/profile?region={}&realm={}&name={}&fields={}"
+
+    for player in players:
+        for character in player.characters:
+            tasks.append(asyncio.create_task(session.get(url.format(character.region, character.realm, character.name, "mythic_plus_best_runs"), ssl=False)))
+            tasks.append(asyncio.create_task(session.get(url.format(character.region, character.realm, character.name, "mythic_plus_alternate_runs"), ssl=False)))
+    return tasks
+    
+
+async def get_player_update(self):
+    async with CachedSession(cache=SQLiteBackend(cache_name='player_cache', expire_after=60*30)) as session:
+        tasks = self.get_players_update_tasks(session)
+        responses = await asyncio.gather(*tasks)
+        for response in responses:
+            self.results.append(await response.json())
+"""
+
+
+def update_data_continuously(players):
+    time.sleep(1801)
+    while True:
+        # Put your data update logic here
+        ##print("Updating data...")
+
+        if len(players) >= 1: 
+            asyncio.run(get_player_update(players,tq=0))
+        time.sleep(1801)  # Sleep for 30 minutes (1800 seconds)
+
+
+async def get_char_update(session, url):
+    async with session.get(url) as resp:
+        response = await resp.json()
+        return response
+
+async def get_player_update(players, tq=None):
+    async with CachedSession(cache=SQLiteBackend(cache_name='player_cache', expire_after=60*30)) as session:
+        tasks = []
+        fields = ["mythic_plus_best_runs","mythic_plus_alternate_runs"]
+        
+
+        for player in players:
+            player.results = []  # Reset the results list for this player
+
+            for character in player.characters:
+                for field in fields:
+                    url = f'https://raider.io/api/v1/characters/profile?region={character.region}&realm={character.realm}&name={character.name}&fields={field}'
+                    tasks.append(asyncio.ensure_future(get_char_update(session, url)))
+        results = None
+        if tq == 0:
+            results = await asyncio.gather(*tasks)
+        else:
+            results = await tqdm.gather(*tasks, ncols=70)
+        for result in results:
+            for player in players:
+                for character in player.characters:
+                    if result['name'] == character.name and result['realm'] == character.realm and result['region'] == character.region:
+                        player.results.append(result)
+
+def update_data(players, last_run):
+    if len(players) >= 1 and (time.time() - last_run) >= 30*60: 
+        start = time.time()
+        print("Updating data")
+        asyncio.run(get_player_update(players))
+        last_run = time.time()
+        end = time.time()
+        print(end - start)
+        print("")
+    return last_run
+
 
 """for p in players:
     p.who_to_play_for_key("hoi", 20)
@@ -275,21 +351,30 @@ def option4():
     pass        
 
 if __name__ == '__main__':
+    started_at = time.time()
+    last_run = 0
+    players = load_from_file()
+    last_run = update_data(players,last_run)
+    # Create a thread that runs the update_data_continuously function
+    update_thread = threading.Thread(target=update_data_continuously, args=(players,))
+
+    # Start the thread in the background
+    update_thread.daemon = True
+    update_thread.start()
+
     while 1:
         option = '' # reset option
-        print('')
+        
         print_menu(menu_options_main)
-        players = load_from_file()
-        if len(players) >= 1: update_all_players()
+        
         try:
             option = int(input('Enter your choice: '))
         except:
             pass
         print('')
 
-        if option == 1:
-            option1()
-            continue
+
+        ## These options dont need data update before being run.
         if option == 2:
             option2()
             continue
@@ -299,8 +384,15 @@ if __name__ == '__main__':
         if option == 4:
             option4()
             continue
-        if option == 5:
+        if option == 5: 
             exit()
+
+        ## Update again after idling in "Enter Choice for half an hour"
+        ##last_run = update_data(players,last_run)
+
+        if option == 1:
+            option1()
+            continue
         else: 
             print(f'Invalid option. Please enter a digit between 1 and {len(menu_options_main)}')
 
