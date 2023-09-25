@@ -133,7 +133,7 @@ async def get_player_update(players, tq=None):
             for character in player.characters:
                 for field in fields:
                     url = f'https://raider.io/api/v1/characters/profile?region={character.region}&realm={character.realm}&name={character.name}&fields={field}'
-                    tasks.append(asyncio.ensure_future(get_char_update(session, url)))
+                    tasks.append(asyncio.create_task(get_char_update(session, url)))
         results = None
         if tq == 0:
             results = await asyncio.gather(*tasks)
