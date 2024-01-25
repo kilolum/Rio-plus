@@ -14,21 +14,18 @@ from tabulate import tabulate
 def seconds_until_next_wednesday_6am():
     # Get the current date and time
     now = datetime.datetime.now()
-    
+
     # Calculate the days until the next Wednesday (0 = Monday, 1 = Tuesday, ...)
     days_until_next_wednesday = (2 - now.weekday() + 7) % 7
-    
+
     # Create a datetime object for the next Wednesday at 6:00 AM
     next_wednesday = now + datetime.timedelta(days=days_until_next_wednesday)
     next_wednesday = next_wednesday.replace(hour=6, minute=0, second=0, microsecond=0)
-    
+
     # Calculate the time difference in seconds
     time_difference = next_wednesday - now
-    
-    # Convert the time difference to seconds
-    seconds_until_next_wednesday = time_difference.total_seconds()
-    
-    return seconds_until_next_wednesday
+
+    return time_difference.total_seconds()
 
 requests_cache.install_cache(cache_name='affix_cache', expire_after=seconds_until_next_wednesday_6am())
 

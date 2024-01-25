@@ -19,21 +19,18 @@ def print_json(obj):
 def seconds_until_next_wednesday_6am():
     # Get the current date and time
     now = datetime.datetime.now()
-    
+
     # Calculate the days until the next Wednesday (0 = Monday, 1 = Tuesday, ...)
     days_until_next_wednesday = (2 - now.weekday() + 7) % 7
-    
+
     # Create a datetime object for the next Wednesday at 6:00 AM
     next_wednesday = now + datetime.timedelta(days=days_until_next_wednesday)
     next_wednesday = next_wednesday.replace(hour=6, minute=0, second=0, microsecond=0)
-    
+
     # Calculate the time difference in seconds
     time_difference = next_wednesday - now
-    
-    # Convert the time difference to seconds
-    seconds_until_next_wednesday = time_difference.total_seconds()
-    
-    return seconds_until_next_wednesday
+
+    return time_difference.total_seconds()
 
 requests_cache.install_cache(cache_name='rio_cache', expire_after=60*60*24)
 
@@ -118,8 +115,7 @@ def update_data_continuously(players):
 
 async def get_char_update(session, url):
     async with session.get(url) as resp:
-        response = await resp.json()
-        return response
+        return await resp.json()
 
 async def get_player_update(players, tq=None):
     async with CachedSession(cache=SQLiteBackend(cache_name='player_cache', expire_after=60*30)) as session:
@@ -293,10 +289,7 @@ def option1(): # WHO TO PLAY
     print('Enter dungeon and keystone level (e.g. BH7, NELT10, ULD21):')
     input_data = input().strip().upper()
 
-    # Use regular expressions to extract dungeon and level
-    match = re.match(r"([A-Z]{2,4})(\d{1,2})", input_data)
-
-    if match:
+    if match := re.match(r"([A-Z]{2,4})(\d{1,2})", input_data):
         dungeon = match.group(1)
         level = int(match.group(2))
         players[default_player].who_to_play_for_key(dungeon, level)
@@ -339,9 +332,7 @@ def option3(): # CHANGE DEFAULT PLAYER
 
     for player in players:
         if player.name.capitalize() == new_default_player:
-            defaultplayer = players.index(player)
-            return defaultplayer
-
+            return players.index(player)
     else:
         print("Invalid input format. Please enter a valid player name")
 
